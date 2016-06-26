@@ -3,6 +3,7 @@
 
 import os
 import csv
+import numpy as np
 import Tix
 import matplotlib.pyplot as plt
 from Tkinter import *

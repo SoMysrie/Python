@@ -1,7 +1,10 @@
 #!/usr/bin/python
 # -*- coding : utf-8 -*-f
 
-name1 = "donnees/API_6_DS2_fr_csv_v2.csv"
+import matplotlib.pyplot as plt
+import csv
+
+fname1 = "../donnees/API_6_DS2_fr_csv_v2.csv"
 file = open(fname1, "r")
 
 try:
