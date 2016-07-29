@@ -9,9 +9,12 @@ matplotlib.use("TkAgg")
 from matplotlib import pyplot as plt
 from Tkinter import *
 from tkMessageBox import *
+
+import Tkinter, Tkconstants, tkFileDialog
 import pandas as pd
 import numpy as np
 import sys
+
 if sys.version_info[0] >= 3:
     import tkinter as tk
 else:
@@ -30,11 +33,19 @@ class App(tk.Frame):
         FrameButton.pack(side=BOTTOM, padx=30, pady=30)
 
         # Ajout de labels
-        Label(FrameChoice, text="Your choice?").pack(padx=30, pady=30)
+        Label(FrameChoice, text="Your choices?").pack(padx=30, pady=30)
         Label(FrameButton, text="Your doing?").pack(padx=30, pady=30)
 
+        options = {}
+        options['initialdir'] = 'C:\\'
+        options['mustexist'] = False
+        options['parent'] = root
+        options['title'] = 'This is a title'
+        folderpath = tkFileDialog.askdirectory(**options)
+        print folderpath
+
         # Read file and put data into list
-        with open('donnees/choice.csv','r') as csvfile:
+        with open((os.path.join(folderpath,'choice.csv')), 'r') as csvfile:
             reader = csv.reader(csvfile)
             plots = csv.reader(csvfile, delimiter=',')
             with open('coors_new.csv', mode='w') as outfile:
@@ -42,7 +53,7 @@ class App(tk.Frame):
                 self.dict = dict((rows[0],rows[1:]) for rows in reader)
 
         # Read file and put data into list
-        with open('donnees/sampleCSV.csv','r') as csvfile:
+        with open((os.path.join(folderpath,'sampleCSV.csv')),'r') as csvfile:
             reader = csv.reader(csvfile)
             plots = csv.reader(csvfile, delimiter=',')
             self.xVal = next(reader)   #gets the first line
@@ -66,7 +77,6 @@ class App(tk.Frame):
         self.optionmenu_b.pack()
         self.pack()
 
-        # boutons
         # bouton pour afficher le choix
         button = Button(FrameButton, text="See choice", command=self.show_value)
         button.pack() 
@@ -81,6 +91,9 @@ class App(tk.Frame):
 
     # fonctions
     # fonction qui montre le choix de chaque liste deroulante
+    def askdirectory(self):
+        return tkFileDialog.askdirectory(**folderpath)
+
     def show_value(self, *args):
         showinfo('Values', 
               'The first choice is  : ' + self.variable_a.get() + '\n'
@@ -89,6 +102,7 @@ class App(tk.Frame):
     # fonction qui affiche le graph
     def show_graphe(self, *args):
         plt.plot([int(x) for x in self.xVal], [int(y) for y in self.yVal])
+        plt.title(self.variable_a.get() + " : " + self.search_key)
         plt.ylabel('some numbers') 
         plt.show()
 
