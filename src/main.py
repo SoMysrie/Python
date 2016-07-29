@@ -5,72 +5,105 @@ import os
 import csv
 import numpy as np
 import Tix
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib import pyplot as plt
 from Tkinter import *
 from tkMessageBox import *
+import pandas as pd
+import numpy as np
+import plotly.plotly as py
+import plotly.graph_objs as go
+import sys
+if sys.version_info[0] >= 3:
+    import tkinter as tk
+else:
+    import Tkinter as tk
 
-# fonctions
-# fonction qui montre le choix de chaque liste deroulante
-def show_value():
-	showinfo('Values', 
-		  'The value for x is : ' + str(variable1.get()) + '\n'
-		+ 'The value for y is : ' + str(variable2.get()) + '\n')
 
-# fonction qui affiche le graphe
-def show_graphe():
-	plt.plot([variable1.get(), variable2.get()])
-	plt.ylabel('some numbers')
-	plt.show()
+class App(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master, xVal = None, yVal = None)
+        # declaration et initialisation des frames
+        l = tk.LabelFrame(self, text="Print data into graph", padx=20, pady=20)
+        l.pack(fill="both", expand="yes")
+        FrameChoice = Frame(l, borderwidth=2, relief=GROOVE)
+        FrameChoice.pack(side=LEFT, padx=30, pady=30)
+        FrameButton = Frame(l, borderwidth=2, relief=GROOVE)
+        FrameButton.pack(side=BOTTOM, padx=30, pady=30)
 
-# declaration de la fenetre
-fenetre = Tk()
-fenetre['bg']='white'
+        # Ajout de labels
+        Label(FrameChoice, text="Your choice?").pack(padx=30, pady=30)
+        Label(FrameButton, text="Your doing?").pack(padx=30, pady=30)
 
-# declaration et initialisation des frames
-l = LabelFrame(fenetre, text="Print data into graph", padx=20, pady=20)
-l.pack(fill="both", expand="yes")
-FrameX = Frame(l, borderwidth=2, relief=GROOVE)
-FrameX.pack(side=LEFT, padx=30, pady=30)
-FrameY = Frame(l, borderwidth=2, relief=GROOVE)
-FrameY.pack(side=LEFT, padx=30, pady=30)
-# FrameZ = Frame(l, borderwidth=2, relief=GROOVE)
-# FrameZ.pack(side=LEFT, padx=30, pady=30)
-FrameButton = Frame(l, borderwidth=2, relief=GROOVE)
-FrameButton.pack(side=BOTTOM, padx=30, pady=30)
+        # Read file and put data into list
+        with open('example/choice.csv','r') as csvfile:
+            reader = csv.reader(csvfile)
+            plots = csv.reader(csvfile, delimiter=',')
+            with open('coors_new.csv', mode='w') as outfile:
+                writer = csv.writer(outfile)
+                self.dict = dict((rows[0],rows[1:]) for rows in reader)
 
-# Ajout de labels
-Label(FrameX, text="Your X?").pack(padx=30, pady=30)
-Label(FrameY, text="Your Y?").pack(padx=30, pady=30)
-# Label(FrameZ, text="Your Z?").pack(padx=30, pady=30)
-Label(FrameButton, text="Your doing?").pack(padx=30, pady=30)
+        # Read file and put data into list
+        with open('example/sampleCSV.csv','r') as csvfile:
+            reader = csv.reader(csvfile)
+            plots = csv.reader(csvfile, delimiter=',')
+            self.xVal = next(reader)   #gets the first line
+            self.yVal = next(reader)
 
-# declaration et initalisation des variables
-variable1 = IntVar(l)
-variable2 = IntVar(l)
-# variable3 = StringVar(l)
-variable1.set(1) # default value
-variable2.set(4) # default value
-# variable3.set("seven") # default value
+        self.variable_a = tk.StringVar(self)
+        self.variable_b = tk.StringVar(self)
 
-# valeurs dans les listes
-x = OptionMenu(FrameX, variable1, 1, 2, 3)
-x.pack()
-y = OptionMenu(FrameY, variable2, 4, 5, 6)
-y.pack()
-# z = OptionMenu(FrameZ, variable3, "seven", "eight", "nine")
-# z.pack()
+        self.variable_a.trace('w', self.update_options)
 
-# boutons
-# bouton pour afficher le choix de x, y, z
-button = Button(FrameButton, text="See choice", command=show_value)
-button.pack() 
+        self.optionmenu_a = tk.OptionMenu(FrameChoice, self.variable_a, *self.dict.keys())
+        self.optionmenu_b = tk.OptionMenu(FrameChoice, self.variable_b, '')
 
-# bouton pour afficher le graphe
-button = Button(FrameButton, text="See graph", command=show_graphe)
-button.pack() 
+        self.variable_a.set('')
 
-# bouton de sortie
-bouton=Button(FrameButton, text="Close", command=l.quit)
-bouton.pack()
+        self.optionmenu_a.pack()
+        self.optionmenu_b.pack()
+        self.pack()
 
-mainloop()
+        # boutons
+        # bouton pour afficher le choix
+        button = Button(FrameButton, text="See choice", command=self.show_value)
+        button.pack() 
+
+        # bouton pour afficher le graphe
+        button = Button(FrameButton, text="See graph", command=self.show_graphe)
+        button.pack() 
+
+        # bouton de sortie
+        bouton=Button(FrameButton, text="Close", command=l.quit)
+        bouton.pack()
+
+    # fonctions
+    # fonction qui montre le choix de chaque liste deroulante
+    def show_value(self, *args):
+        showinfo('Values', 
+              'The first choice is  : ' + self.variable_a.get() + '\n'
+            + 'The second choice is : ' + self.variable_b.get() + '\n')
+    
+    # fonction qui affiche le graph
+    def show_graphe(self, *args):
+        plt.plot([int(x) for x in self.xVal], [int(y) for y in self.yVal])
+        plt.ylabel('some numbers') 
+        plt.show()
+
+    # fonction qui met a jour le choix
+    def update_options(self, *args):
+        informations = self.dict[self.variable_a.get()]
+        self.variable_b.set(informations[0])
+
+        menu = self.optionmenu_b['menu']
+        menu.delete(0, 'end')
+
+        for info in informations:
+            menu.add_command(label=info, command=lambda intel=info: self.variable_b.set(intel))
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = App(root)
+    app.mainloop()
