@@ -20,7 +20,7 @@ else:
 
 class App(tk.Frame):
     def __init__(self, master):
-        tk.Frame.__init__(self, master, xVal = None, yVal = None)
+        tk.Frame.__init__(self, master, allVal= None, xVal = None, yVal = None, search_key = None)
         # declaration et initialisation des frames
         l = tk.LabelFrame(self, text="Print data into graph", padx=20, pady=20)
         l.pack(fill="both", expand="yes")
@@ -34,7 +34,7 @@ class App(tk.Frame):
         Label(FrameButton, text="Your doing?").pack(padx=30, pady=30)
 
         # Read file and put data into list
-        with open('example/choice.csv','r') as csvfile:
+        with open('donnees/choice.csv','r') as csvfile:
             reader = csv.reader(csvfile)
             plots = csv.reader(csvfile, delimiter=',')
             with open('coors_new.csv', mode='w') as outfile:
@@ -42,14 +42,16 @@ class App(tk.Frame):
                 self.dict = dict((rows[0],rows[1:]) for rows in reader)
 
         # Read file and put data into list
-        with open('example/sampleCSV.csv','r') as csvfile:
+        with open('donnees/sampleCSV.csv','r') as csvfile:
             reader = csv.reader(csvfile)
             plots = csv.reader(csvfile, delimiter=',')
             self.xVal = next(reader)   #gets the first line
             with open('coors_new.csv', mode='w') as outfile:
                 writer = csv.writer(outfile)
-                self.yVal = dict((rows[0],rows[1:]) for rows in reader)
-
+                self.allVal = dict((rows[0],rows[1:]) for rows in reader)
+        
+        self.yVal = []
+        
         self.variable_a = tk.StringVar(self)
         self.variable_b = tk.StringVar(self)
 
@@ -86,7 +88,7 @@ class App(tk.Frame):
     
     # fonction qui affiche le graph
     def show_graphe(self, *args):
-        plt.plot([int(x) for x in self.xVal], [int(y) for y in self.yVal[2:]])
+        plt.plot([int(x) for x in self.xVal], [int(y) for y in self.yVal])
         plt.ylabel('some numbers') 
         plt.show()
 
@@ -101,13 +103,19 @@ class App(tk.Frame):
         for info in informations:
             menu.add_command(label=info, command=lambda infotype=info: self.variable_b.set(infotype))
 
+        self.search_key = self.variable_b.get()
         self.variable_b.trace("w", self.callback)
 
+        for key, news in self.allVal.iteritems():
+            if key == self.search_key:
+                self.yVal = news
+
+    # fonction qui met a jour le 2eme choix
     def callback(self, *args):
-        search_key = self.dict[self.variable_b.get()]
-        for key, news in self.yVal.iteritems():
-            if key == search_key:
-                print news
+        self.search_key = self.variable_b.get()
+        for key, news in self.allVal.iteritems():
+            if key == self.search_key:
+                self.yVal = news
 
 if __name__ == "__main__":
     root = tk.Tk()
