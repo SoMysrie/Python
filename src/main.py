@@ -3,7 +3,6 @@
 
 import os
 import csv
-import numpy as np
 import Tix
 import matplotlib
 matplotlib.use("TkAgg")
@@ -12,8 +11,6 @@ from Tkinter import *
 from tkMessageBox import *
 import pandas as pd
 import numpy as np
-import plotly.plotly as py
-import plotly.graph_objs as go
 import sys
 if sys.version_info[0] >= 3:
     import tkinter as tk
@@ -49,7 +46,9 @@ class App(tk.Frame):
             reader = csv.reader(csvfile)
             plots = csv.reader(csvfile, delimiter=',')
             self.xVal = next(reader)   #gets the first line
-            self.yVal = next(reader)
+            with open('coors_new.csv', mode='w') as outfile:
+                writer = csv.writer(outfile)
+                self.yVal = dict((rows[0],rows[1:]) for rows in reader)
 
         self.variable_a = tk.StringVar(self)
         self.variable_b = tk.StringVar(self)
@@ -87,7 +86,7 @@ class App(tk.Frame):
     
     # fonction qui affiche le graph
     def show_graphe(self, *args):
-        plt.plot([int(x) for x in self.xVal], [int(y) for y in self.yVal])
+        plt.plot([int(x) for x in self.xVal], [int(y) for y in self.yVal[2:]])
         plt.ylabel('some numbers') 
         plt.show()
 
@@ -100,8 +99,15 @@ class App(tk.Frame):
         menu.delete(0, 'end')
 
         for info in informations:
-            menu.add_command(label=info, command=lambda intel=info: self.variable_b.set(intel))
+            menu.add_command(label=info, command=lambda infotype=info: self.variable_b.set(infotype))
 
+        self.variable_b.trace("w", self.callback)
+
+    def callback(self, *args):
+        search_key = self.dict[self.variable_b.get()]
+        for key, news in self.yVal.iteritems():
+            if key == search_key:
+                print news
 
 if __name__ == "__main__":
     root = tk.Tk()
